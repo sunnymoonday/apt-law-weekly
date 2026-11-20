@@ -1,0 +1,310 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px;font-family:system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>공동주택관리 해석례</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600&family=Noto+Serif+KR:wght@600;800&display=swap">
+<style>
+/* Layout: 좁은 문서 칼럼 — 머리글(갱신일·건수) → 필터 → 주차별 카드 목록, 카드 클릭 시 상세 패널 */
+:root{
+  --bg:#f5f6f4; --surface:#ffffff; --ink:#1c2630; --muted:#5d6872; --line:#dde1de;
+  --accent:#245b6e; --accent-soft:#e3eef1;
+  --t-case:#8a3324; --t-case-bg:#f6e7e3;
+  --t-qa:#2a5a9a; --t-qa-bg:#e5edf8;
+  --t-int:#2f6b45; --t-int-bg:#e3f1e8;
+  --shadow:0 10px 40px rgba(20,35,45,.18);
+  --f-display:"Noto Serif KR","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12181d; --surface:#1a2228; --ink:#e4e9ec; --muted:#9aa6ae; --line:#2b363e;
+  --accent:#7fb6c9; --accent-soft:#1f3139;
+  --t-case:#e8a091; --t-case-bg:#3a2420;
+  --t-qa:#9dbcf0; --t-qa-bg:#1f2c40;
+  --t-int:#93d1a8; --t-int-bg:#1d3326;
+  --shadow:0 10px 40px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12181d; --surface:#1a2228; --ink:#e4e9ec; --muted:#9aa6ae; --line:#2b363e;
+  --accent:#7fb6c9; --accent-soft:#1f3139;
+  --t-case:#e8a091; --t-case-bg:#3a2420;
+  --t-qa:#9dbcf0; --t-qa-bg:#1f2c40;
+  --t-int:#93d1a8; --t-int-bg:#1d3326;
+  --shadow:0 10px 40px rgba(0,0,0,.5); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:860px;margin:0 auto;padding-block:32px 64px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-direction:column;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:18px}
+.eyebrow{font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:500}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(26px,5vw,36px);line-height:1.25;margin:0;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:13.5px;font-variant-numeric:tabular-nums}
+.meta b{color:var(--ink);font-weight:600}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:14px;padding:6px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab .n{opacity:.7;margin-left:4px;font-variant-numeric:tabular-nums}
+.right{display:flex;gap:8px;flex-wrap:wrap;flex:1 1 260px;justify-content:flex-end}
+.search{display:flex;gap:6px;flex:1 1 240px;min-width:0;max-width:340px;margin:0}
+input[type=search]{font:inherit;font-size:14px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);flex:1 1 auto;min-width:0}
+.btn{font:inherit;font-size:14px;font-weight:500;padding:7px 14px;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.week{display:flex;flex-direction:column;gap:12px}
+.week h2{font-family:var(--f-display);font-size:17px;font-weight:600;margin:8px 0 0;display:flex;gap:10px;align-items:baseline}
+.week h2 small{font-family:var(--f-body);font-size:13px;color:var(--muted);font-weight:400}
+.card{all:unset;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;padding:16px 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:border-color .15s,transform .15s}
+.card:hover{border-color:var(--accent)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card-top{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.type{font-weight:600;font-size:12px;padding:2px 9px;border-radius:4px;letter-spacing:.02em}
+.type.판결{color:var(--t-case);background:var(--t-case-bg)}
+.type.질의회신{color:var(--t-qa);background:var(--t-qa-bg)}
+.type.법령해석{color:var(--t-int);background:var(--t-int-bg)}
+.card h3{margin:0;font-size:16.5px;font-weight:600;line-height:1.45;text-wrap:balance}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:12px;color:var(--accent);background:var(--accent-soft);padding:1px 8px;border-radius:999px}
+.more{font-size:13px;color:var(--accent);font-weight:500}
+.empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:10px}
+.note{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+/* detail */
+.overlay{position:fixed;inset:0;background:rgba(10,18,24,.45);display:flex;justify-content:center;align-items:flex-start;overflow-y:auto;z-index:20;
+  padding:calc(24px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.detail{background:var(--surface);color:var(--ink);width:100%;max-width:760px;border-radius:12px;box-shadow:var(--shadow);padding:28px clamp(18px,4vw,36px);display:flex;flex-direction:column;gap:18px;min-width:0}
+.detail-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.detail h2{font-family:var(--f-display);font-size:clamp(20px,3.6vw,25px);line-height:1.4;margin:6px 0 0;text-wrap:balance}
+.close{all:unset;cursor:pointer;font-size:24px;line-height:1;padding:4px 8px;color:var(--muted);border-radius:6px}
+.close:focus-visible{outline:2px solid var(--accent)}
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:0;font-size:14px;font-variant-numeric:tabular-nums}
+dl.facts dt{color:var(--muted)}
+dl.facts dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.sec h4{font-size:13px;letter-spacing:.06em;color:var(--muted);margin:0 0 6px;font-weight:600}
+.sec p{margin:0;white-space:pre-line}
+.lead{font-size:15.5px;background:var(--accent-soft);padding:12px 16px;border-radius:8px}
+.laws{display:flex;flex-wrap:wrap;gap:6px}
+.law{font-size:13px;border:1px solid var(--line);padding:2px 10px;border-radius:4px}
+.sources{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.sources a{color:var(--accent);overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
+/* PDF 렌더용 (화면 밖) */
+#pdf-stage{position:fixed;left:-10000px;top:0;width:720px;background:#fff;color:#111}
+.pdf{font-family:var(--f-body);font-size:12.5px;line-height:1.7;color:#111;background:#fff;padding:8px 4px}
+.pdf h1{font-family:var(--f-display);font-size:22px;margin:0 0 4px;color:#111}
+.pdf .pmeta{color:#555;font-size:11.5px;margin-bottom:14px;border-bottom:1.5px solid #111;padding-bottom:8px}
+.pdf .pitem{padding:12px 0 14px;border-bottom:1px solid #ccc;page-break-inside:avoid}
+.pdf .pitem h2{font-family:var(--f-display);font-size:16px;margin:4px 0 6px;color:#111}
+.pdf .ptype{font-size:11px;font-weight:600;color:#245b6e}
+.pdf h4{font-size:11.5px;color:#555;margin:8px 0 2px}
+.pdf p{margin:0;white-space:pre-line}
+.pdf a{color:#245b6e;word-break:break-all}
+.pdf table{border-collapse:collapse;font-size:11.5px;margin:4px 0}
+.pdf td{padding:1px 12px 1px 0;vertical-align:top}
+.pdf td:first-child{color:#555;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:520px){.right{justify-content:stretch}.search{max-width:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">공동주택관리 · 판결 · 질의회신 · 법령해석</div>
+    <h1>공동주택관리 해석례</h1>
+    <div class="meta" id="meta"><span>자료를 불러오는 중입니다…</span></div>
+  </header>
+
+  <div class="toolbar">
+    <div class="tabs" role="group" aria-label="유형 필터" id="tabs"></div>
+    <div class="right">
+      <form class="search" id="search-form" role="search">
+        <input type="search" id="q" placeholder="제목·조문·키워드 검색" aria-label="검색어">
+        <button type="submit" class="btn ghost" id="search-btn">검색</button>
+      </form>
+      <button class="btn" id="pdf-week" disabled>이번 주 PDF</button>
+    </div>
+  </div>
+
+  <main id="list"><div class="empty">자료를 불러오는 중입니다…</div></main>
+
+  <p class="note">요약은 각 출처(법원·법제처·국토교통부 공개자료와 전문지 기사)를 바탕으로 정리한 것입니다. 법적 판단이 필요한 경우 반드시 출처 원문과 현행 법령을 확인하세요. 매주 월요일 오전 9시(한국시간)에 새 자료가 추가되며, 업데이트 일시는 위에 표시됩니다.</p>
+</div>
+
+<div id="pdf-stage" aria-hidden="true"></div>
+<div class="overlay" id="overlay" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+const TYPES = ["판결","질의회신","법령해석"];
+const state = { items: [], meta: null, filter: "전체", q: "", open: null };
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = d => d ? d.replace(/-/g, ".") : "";
+let downloads = null, standalone = false;
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>t.hidden=true,3200); }
+
+function weekLabel(w){
+  if(!w) return "기타";
+  const d = new Date(w+"T00:00:00"); const e = new Date(d); e.setDate(d.getDate()+6);
+  const f = x => `${x.getMonth()+1}월 ${x.getDate()}일`;
+  return `${d.getFullYear()}년 ${f(d)} ~ ${f(e)}`;
+}
+const DAYS = ["일","월","화","수","목","금","토"];
+function kst(d){ return new Date(d.getTime() + (d.getTimezoneOffset()+540)*60000); }
+function fmtDateTime(iso){
+  if(!iso) return "-"; const d0 = new Date(iso); if(isNaN(d0)) return String(iso);
+  const d = kst(d0), p = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}(${DAYS[d.getDay()]}) ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function nextMonday9(){
+  const now = kst(new Date()); const d = new Date(now); d.setHours(9,0,0,0);
+  let add = (1 - d.getDay() + 7) % 7; if(add===0 && now >= d) add = 7; d.setDate(d.getDate()+add);
+  const p = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}(월) 09:00`;
+}
+function latestWeek(){ return state.items.reduce((m,i)=> (i.addedWeek||"")>m ? i.addedWeek : m, ""); }
+
+function visible(){
+  const q = state.q.trim().toLowerCase();
+  return state.items.filter(i => (state.filter==="전체" || i.type===state.filter) &&
+    (!q || [i.title,i.summary,i.caseNo,i.issuer,(i.laws||[]).join(" "),(i.topics||[]).join(" ")].join(" ").toLowerCase().includes(q)));
+}
+
+function renderMeta(){
+  const lw = latestWeek();
+  const counts = Object.fromEntries(TYPES.map(t=>[t, state.items.filter(i=>i.type===t).length]));
+  const upd = fmtDateTime(state.meta?.updatedAt);
+  const nxt = nextMonday9();
+  $("#meta").innerHTML = `<span>최근 업데이트 <b>${esc(upd)}</b></span><span>다음 업데이트 <b>${esc(nxt)}</b></span><span>최신 수록 주간 <b>${esc(lw?weekLabel(lw):"-")}</b></span>`+
+    `<span>전체 <b>${state.items.length}</b>건 (판결 ${counts["판결"]} · 질의회신 ${counts["질의회신"]} · 법령해석 ${counts["법령해석"]})</span>`;
+  $("#tabs").innerHTML = ["전체",...TYPES].map(t=>{
+    const n = t==="전체" ? state.items.length : counts[t];
+    return `<button class="tab" data-f="${t}" aria-pressed="${state.filter===t}">${t}<span class="n">${n}</span></button>`;
+  }).join("");
+  $("#pdf-week").disabled = !lw;
+}
+
+function renderList(){
+  const items = visible();
+  if(!state.items.length){ return; }
+  if(!items.length){ $("#list").innerHTML = `<div class="empty">조건에 맞는 자료가 없습니다. 필터나 검색어를 바꿔 보세요.</div>`; return; }
+  const groups = {};
+  items.forEach(i => (groups[i.addedWeek||""] ||= []).push(i));
+  $("#list").innerHTML = Object.keys(groups).sort().reverse().map(w => `
+    <section class="week"><h2>${esc(weekLabel(w))}<small>${groups[w].length}건${w===latestWeek()?" · 최신":""}</small></h2>
+    ${groups[w].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).map(card).join("")}</section>`).join("");
+}
+function card(i){
+  return `<button class="card" data-id="${esc(i.id)}">
+    <div class="card-top"><span class="type ${esc(i.type)}">${esc(i.type)}</span><span>${esc(i.issuer)}</span>${i.caseNo?`<span>${esc(i.caseNo)}</span>`:""}${i.date?`<span>${fmt(i.date)}</span>`:""}</div>
+    <h3>${esc(i.title)}</h3><p>${esc(i.summary)}</p>
+    <div class="tags">${(i.topics||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    <span class="more">세부내용 보기 →</span></button>`;
+}
+
+function sec(h, body, cls=""){ return body ? `<div class="sec"><h4>${h}</h4><p class="${cls}">${esc(body)}</p></div>` : ""; }
+function openDetail(id){
+  const i = state.items.find(x=>x.id===id); if(!i) return;
+  state.open = id;
+  const o = $("#overlay");
+  o.innerHTML = `<article class="detail" role="dialog" aria-modal="true" aria-labelledby="dt">
+    <div class="detail-head"><div><span class="type ${esc(i.type)}">${esc(i.type)}</span><h2 id="dt">${esc(i.title)}</h2></div>
+      <button class="close" id="close" aria-label="닫기">×</button></div>
+    <dl class="facts">
+      <dt>기관</dt><dd>${esc(i.issuer||"-")}</dd>
+      ${i.caseNo?`<dt>사건·안건번호</dt><dd>${esc(i.caseNo)}</dd>`:""}
+      <dt>${i.type==="판결"?"선고일":i.type==="질의회신"?"회신일":"해석일"}</dt><dd>${fmt(i.date)||"-"}</dd>
+      ${i.published?`<dt>출처 게재일</dt><dd>${fmt(i.published)}</dd>`:""}
+    </dl>
+    ${sec("요약", i.summary, "lead")}
+    ${sec(i.type==="질의회신"?"질의 요지":"쟁점", i.question)}
+    ${sec(i.type==="판결"?"판단":i.type==="질의회신"?"회신 내용":"해석 내용", i.answer)}
+    ${sec("이유·근거", i.reasoning)}
+    ${(i.laws||[]).length?`<div class="sec"><h4>관련 조문</h4><div class="laws">${i.laws.map(l=>`<span class="law">${esc(l)}</span>`).join("")}</div></div>`:""}
+    ${sec("관리 실무 시사점", i.practice)}
+    <div class="sec"><h4>출처</h4><ol class="sources">${(i.sources||[]).map(s=>`<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name||s.url)}</a></li>`).join("")}</ol></div>
+    <div class="actions"><button class="btn" id="pdf-one">이 자료 PDF로 저장</button><button class="btn ghost" id="close2">닫기</button></div>
+  </article>`;
+  o.hidden = false; document.body.style.overflow="hidden";
+  $("#close").focus();
+  $("#close").onclick = $("#close2").onclick = closeDetail;
+  $("#pdf-one").onclick = e => makePdf([i], `${i.type}_${(i.caseNo||i.date||i.id).replace(/[\\/:*?"<>|\s]/g,"_")}.pdf`, i.title, e.currentTarget);
+}
+function closeDetail(){ $("#overlay").hidden=true; $("#overlay").innerHTML=""; document.body.style.overflow=""; const c=document.querySelector(`.card[data-id="${CSS.escape(state.open||"")}"]`); state.open=null; c&&c.focus(); }
+
+function pdfItem(i){
+  const p = (h,b)=> b?`<h4>${h}</h4><p>${esc(b)}</p>`:"";
+  return `<div class="pitem"><div class="ptype">${esc(i.type)} · ${esc(i.issuer)}</div><h2>${esc(i.title)}</h2>
+    <table><tr><td>사건·안건번호</td><td>${esc(i.caseNo||"-")}</td></tr><tr><td>일자</td><td>${fmt(i.date)||"-"}</td></tr>
+    ${(i.laws||[]).length?`<tr><td>관련 조문</td><td>${esc(i.laws.join(", "))}</td></tr>`:""}</table>
+    ${p("요약",i.summary)}${p(i.type==="질의회신"?"질의 요지":"쟁점",i.question)}${p(i.type==="판결"?"판단":i.type==="질의회신"?"회신 내용":"해석 내용",i.answer)}
+    ${p("이유·근거",i.reasoning)}${p("관리 실무 시사점",i.practice)}
+    <h4>출처</h4>${(i.sources||[]).map(s=>`<p>${esc(s.name||"")}<br><a href="${esc(s.url)}">${esc(s.url)}</a></p>`).join("")}</div>`;
+}
+async function makePdf(items, filename, heading, btn){
+  if(!downloads && !standalone){ toast("이 화면에서는 파일 저장을 쓸 수 없습니다. claude.ai에서 로그인한 상태로 열어 주세요."); return; }
+  if(typeof html2pdf==="undefined"){ toast("PDF 도구를 불러오지 못했습니다. 페이지를 새로 고친 뒤 다시 시도하세요."); return; }
+  const label = btn.textContent; btn.disabled=true; btn.textContent="PDF 만드는 중…";
+  const stage = $("#pdf-stage");
+  stage.innerHTML = `<div class="pdf"><h1>${esc(heading)}</h1><div class="pmeta">공동주택관리 해석례 · 생성일 ${fmt(new Date().toISOString().slice(0,10))} · 출처 원문과 현행 법령을 함께 확인하세요.</div>${items.map(pdfItem).join("")}</div>`;
+  try{
+    const worker = html2pdf().set({ margin:[14,12,14,12], filename, image:{type:"jpeg",quality:0.95},
+      html2canvas:{scale:2,backgroundColor:"#ffffff",useCORS:true}, jsPDF:{unit:"mm",format:"a4",orientation:"portrait"},
+      pagebreak:{mode:["css","legacy"],avoid:".pitem"} }).from(stage.firstElementChild);
+    if(downloads) await downloads.save({ filename, data: await worker.outputPdf("blob") });
+    else await worker.save();
+    toast("PDF를 저장했습니다.");
+  }catch(e){
+    const c = e && e.code;
+    if(c==="declined") toast("저장을 취소했습니다.");
+    else if(c==="rate_limited") toast("저장 창이 이미 열려 있습니다. 잠시 후 다시 시도하세요.");
+    else toast("PDF를 저장하지 못했습니다. 다시 시도해 주세요.");
+  }finally{ stage.innerHTML=""; btn.disabled=false; btn.textContent=label; }
+}
+
+document.addEventListener("click", e => {
+  const t = e.target.closest(".tab"); if(t){ state.filter=t.dataset.f; renderMeta(); renderList(); return; }
+  const c = e.target.closest(".card"); if(c){ openDetail(c.dataset.id); return; }
+  if(e.target.id==="overlay") closeDetail();
+});
+document.addEventListener("keydown", e => { if(e.key==="Escape" && state.open) closeDetail(); });
+$("#search-form").addEventListener("submit", e => {
+  e.preventDefault(); state.q = $("#q").value; renderList();
+  const n = visible().length;
+  if(state.items.length) toast(state.q.trim() ? `'${state.q.trim()}' 검색 결과 ${n}건` : `전체 ${n}건을 표시합니다.`);
+});
+$("#q").addEventListener("input", e => { if(!e.target.value && state.q){ state.q=""; renderList(); } });
+$("#pdf-week").addEventListener("click", e => {
+  const w = latestWeek(); const items = state.items.filter(i=>i.addedWeek===w).sort((a,b)=>TYPES.indexOf(a.type)-TYPES.indexOf(b.type));
+  makePdf(items, `공동주택_법령주간_${w}.pdf`, `공동주택관리 해석례 (${weekLabel(w)})`, e.currentTarget);
+});
+
+(async function boot(){
+  const failMsg = msg => { $("#list").innerHTML = `<div class="empty">${msg}</div>`; $("#meta").innerHTML = `<span>${msg}</span>`; };
+  const timer = setTimeout(()=> failMsg("자료 저장소에 아직 연결되지 않았습니다. 잠시 후 새로 고쳐 주세요."), 10000);
+  // 일반 웹(GitHub Pages 등): data/ 폴더의 JSON을 읽고, PDF는 브라우저로 바로 내려받음
+  const loadStatic = async () => {
+    standalone = true;
+    try{
+      const [items, meta] = await Promise.all([
+        fetch("data/items.json", {cache:"no-store"}).then(r => { if(!r.ok) throw 0; return r.json(); }),
+        fetch("data/meta.json", {cache:"no-store"}).then(r => r.ok ? r.json() : null).catch(()=>null)
+      ]);
+      clearTimeout(timer); state.items = items; state.meta = meta; renderMeta(); renderList();
+    }catch(_){ clearTimeout(timer); failMsg("자료를 불러오지 못했습니다. 페이지를 새로 고쳐 주세요."); }
+  };
+  if(!window.claude?.use){ return loadStatic(); }
+  claude.use("downloads").then(d => { downloads = d; if(!d) $("#pdf-week").title = "이 화면에서는 파일 저장을 쓸 수 없습니다."; });
+  const db = await claude.use("db");
+  if(!db){ clearTimeout(timer); failMsg("claude.ai에서 로그인한 상태로 열면 자료가 표시됩니다."); return; }
+  db.doc("meta/info").onSnapshot(s => { state.meta = s.exists ? s.data() : null; renderMeta(); }, ()=>{});
+  db.collection("items").onSnapshot(snap => {
+    if(!snap.metadata.fromCache) clearTimeout(timer);
+    state.items = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderMeta();
+    if(!state.items.length){ if(!snap.metadata.fromCache) $("#list").innerHTML = `<div class="empty">아직 수록된 자료가 없습니다. 매주 월요일 오전 9시에 새 판결·질의회신·법령해석이 추가됩니다.</div>`; return; }
+    renderList();
+  }, err => { clearTimeout(timer); failMsg("자료를 불러오지 못했습니다. 페이지를 새로 고쳐 주세요."); });
+})();
+</script>
+</body></html>
